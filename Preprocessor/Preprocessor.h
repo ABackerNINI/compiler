@@ -25,6 +25,8 @@ namespace compiler {
 
     bool strcmp(const char *s1, const char *s2, size_t n);
 
+    bool strcmp(const _str *s1, const _str *s2);
+
     void strprintf(const _str *str);
 
     char *ReadFile(const char *_Path);
@@ -65,6 +67,18 @@ namespace compiler {
             return false;
         }
 
+        inline size_t isusrdefname(const char *s) {
+            size_t isudn = 0;
+            for (; *s; ++s) {
+                if (isletter(*s) || isdigit(*s) || *s == '_') {
+                    ++isudn;
+                } else {
+                    break;
+                }
+            }
+            return isudn;
+        }
+
         inline size_t iskeyword(const char *s) {
             for (int i = 0; i < 2; ++i) {
                 if (strcmp(s, keywords[i].p, keywords[i].len)) {
@@ -76,9 +90,7 @@ namespace compiler {
 
         const char *_get(const char *s, _str *v);
 
-        void DealInclude(std::list<_str> *list);
-
-        void DealDefine(std::list<_str> *list);
+        void DealIncludeAndDefine(std::list<_str> *list);
 
         std::list<_str> ParseCpp(const char *s);
 

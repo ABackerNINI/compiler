@@ -2,12 +2,13 @@
 // Created by abacker on 2/27/17.
 //
 
-#include "/home/abacker/ClionProjects/Compiler/Test/TestPreprocessor/test.h"
+#include "/home/nini/Project/compiler/Test/TestPreprocessor/test.h"
 
+#define ABC 100
 
 int main() {
 
-    int i = ABC;
+    int i = ABCD;
 
     return 0;
 }

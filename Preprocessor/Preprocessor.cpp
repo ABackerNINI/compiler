@@ -30,6 +30,16 @@ bool compiler::strcmp(const char *s1, const char *s2, size_t n) {
     return true;
 }
 
+bool compiler::strcmp(const _str *s1, const _str *s2) {
+    if (s1->len == s2->len) {
+        for (size_t i = 0; i < s1->len; ++i) {
+            if (*(s1->p + i) != *(s2->p + i))return false;
+        }
+    } else return false;
+
+    return true;
+}
+
 char *compiler::ReadFile(const char *_Path) {
     FILE *fp = fopen(_Path, "rb");
     if (fp == NULL) {
@@ -72,17 +82,23 @@ const char *compiler::preprocessor::_get(const char *s, _str *v) {
                 return s + 1;
             }
         }
+        //mark:throw no match quote
+    } else if (*s == '/' && *(s + 1) == '/') {
+        for (; *s && *s != '\n'; ++s);
+        return _get(s, v);
     } else if (v->len = iskeyword(s), v->len > 0) {
         return s + v->len;
+    } else if (v->len = isusrdefname(s), v->len > 0) {
+        return s + v->len;
     } else {
-        v->len = 0;
         for (; *s; ++s) {
-            if (isletter(*s) || isdigit(*s) || *s == '_') {
+            if (!iswhitespace(*s)) {
                 ++v->len;
             } else {
-                return s;
+                return s + 1;
             }
         }
+        //mark
     }
     return NULL;
 }
@@ -91,22 +107,17 @@ std::list<_str> compiler::preprocessor::ParseCpp(const char *s) {
     std::list<_str> list;
     _str str;
 
-    for (const char *l = s; *s != '\0'; ++s) {
-        s = _get(s, &str);
-        if (s) {
-            list.push_back(str);
-        } else break;
-    }
+    while (s = _get(s, &str), s)list.push_back(str);
 
-//    for (auto iter = list.begin(); iter != list.end(); ++iter) {
-//        strprintf(&*iter);
-//        printf("|");
-//    }
+    for (auto iter = list.begin(); iter != list.end(); ++iter) {
+        strprintf(&*iter);
+        printf("|");
+    }
 
     return list;
 }
 
-void compiler::preprocessor::DealInclude(std::list<_str> *list) {
+void compiler::preprocessor::DealIncludeAndDefine(std::list<_str> *list) {
     std::map<_str *, _str *> map_define;
     for (auto iter = list->begin(); iter != list->end(); ++iter) {
         if (strcmp("#include", iter->p, iter->len)) {
@@ -118,54 +129,45 @@ void compiler::preprocessor::DealInclude(std::list<_str> *list) {
                 _path[path->len - 2] = '\0';
 
                 const char *c = ReadFile(_path);////mark:delete
-                path->p = c;
-                path->len = strlen(c);
-
-//                printf("%s\n", c);
+                if (c) {
+                    path->p = c;
+                    path->len = strlen(c);
+//                  printf("%s\n", c);
+                }
             }
         } else if (strcmp("#define", iter->p, iter->len)) {
             auto def_name = ++iter;
             auto def_value = ++iter;
 
             map_define[&*def_name] = &*def_value;
-        } /*else {
+        } else {
             for (auto iter_md = map_define.begin(); iter_md != map_define.end(); ++iter_md) {
-                if (strcmp(iter->p, iter_md->second->p, std::min(iter->len, iter_md->second->len))) {
-//                    std::swap(*iter, *iter_md->second);
+                if (strcmp(&*iter, &*iter_md->first)) {
                     iter->p = iter_md->second->p;
                     iter->len = iter_md->second->len;
                 }
             }
-        }*/
+        }
     }
 
     for (auto iter = list->begin(); iter != list->end(); ++iter) {
         strprintf(&*iter);
         printf("|");
     }
-}
-
-void compiler::preprocessor::DealDefine(std::list<_str> *list) {
-    for (auto iter = list->begin(); iter != list->end(); ++iter) {
-        if (strcmp("#define", iter->p, iter->len)) {
-            if (isletter(((++iter)->p)[0])) {
-
-            }
-        }
-    }
+    printf("\n");
 }
 
 void compiler::preprocessor::Preprocess(const char *_Path) {
     char *content = ReadFile(_Path);
     if (content == NULL) {
-
-    }
-
+        //todo
+    } else {
 //    printf("%s", content);
 
-    auto list = ParseCpp(content);
+        auto list = ParseCpp(content);
 
-    DealInclude(&list);
+        DealIncludeAndDefine(&list);
 
-    free(content);
+        free(content);
+    }
 }

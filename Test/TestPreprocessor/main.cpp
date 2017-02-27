@@ -6,7 +6,7 @@
 #include "../../Preprocessor/Preprocessor.h"
 
 int main() {
-    compiler::preprocessor::Preprocess("/home/abacker/ClionProjects/Compiler/Test/TestPreprocessor/test.cpp");
+    compiler::preprocessor::Preprocess("/home/nini/Project/compiler/Test/TestPreprocessor/test.cpp");
 
     return 0;
 }
